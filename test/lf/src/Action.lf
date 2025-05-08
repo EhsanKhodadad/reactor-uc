@@ -1,5 +1,5 @@
 target uC {
-  platform: Native
+  platform: Native, 
 }
 
 main reactor {

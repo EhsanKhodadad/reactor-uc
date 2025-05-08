@@ -28,6 +28,9 @@ platform-test:
 examples:
 	cd examples && ./runAll.sh
 
+patmos-examples:
+	chmod +x examples/patmos/buildAll.sh
+	cd examples/patmos && ./buildAll.sh
 # Get coverage data on unit tests
 coverage:
 	cmake -Bbuild -DBUILD_TESTS=ON -DTEST_COVERAGE=ON

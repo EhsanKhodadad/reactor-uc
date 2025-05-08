@@ -8,13 +8,13 @@ SRC_DIR = $(CURDIR)
 BUILD_DIR = $(CURDIR)/build
 
 # Source files
-SOURCES = $(SRC_DIR)/HelloPatmos.c
+SOURCES = $(SRC_DIR)/hello.c
 
 # Compiler flags
 CFLAGS = -O2 -Wall -Wextra -Werror
 
 # Output binary
-OUTPUT = $(BUILD_DIR)/HelloPatmos.elf
+OUTPUT = $(BUILD_DIR)/hello.elf
 all : $(OUTPUT)
 # Build rule
 $(OUTPUT): $(SOURCES)

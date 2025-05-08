@@ -1,0 +1,14 @@
+chmod +x examples/patmos/buildAll.sh
+cd examples/patmos && ./buildAll.sh
+Entering ./hello
+~/lf-pat-mul/reactor-uc/examples/patmos/hello ~/lf-pat-mul/reactor-uc/examples/patmos
+make[1]: Entering directory '/home/ehsan/lf-pat-mul/reactor-uc/examples/patmos/hello'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/ehsan/lf-pat-mul/reactor-uc/examples/patmos/hello'
+Hello Patmos!
+~/lf-pat-mul/reactor-uc/examples/patmos
+Entering ./hello_lf
+~/lf-pat-mul/reactor-uc/examples/patmos/hello_lf ~/lf-pat-mul/reactor-uc/examples/patmos
+make[1]: Entering directory '/home/ehsan/lf-pat-mul/reactor-uc/examples/patmos/hello_lf'
+patmos-clang /home/ehsan/lf-pat-mul/reactor-uc/src/*.c  ./src-gen/HelloLF/HelloLF/HelloLF.c  ./src-gen/HelloLF/lf_start.c  ./src-gen/HelloLF/lf_main.c  -I/home/ehsan/lf-pat-mul/reactor-uc/include -I/home/ehsan/lf-pat-mul/reactor-uc/external -I./src-gen/HelloLF -DPLATFORM_PATMOS -DSCHEDULER_DYNAMIC -DEVENT_QUEUE_SIZE= -DREACTION_QUEUE_SIZE= -O2 -o HelloLF --Wall
+make[1]: Leaving directory '/home/ehsan/lf-pat-mul/reactor-uc/examples/patmos/hello_lf'
