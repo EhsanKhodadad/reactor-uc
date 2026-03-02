@@ -32,6 +32,20 @@ runs:
           exit 1
         fi
 
+    - name: Verify jtagconfig installation
+      shell: bash
+      run: |
+        echo PATH is $PATH
+        echo GITHUB_PATH is $GITHUB_PATH
+        lsusb
+        jtagd --version
+        jtagconfig -d
+        jtagconfig --version
+        if [ $? -ne 0 ]; then
+          echo "Jtagconfig installation failed"
+          exit 1
+        fi
+
     - name: Clone template
       shell: bash
       run: |

@@ -4,7 +4,7 @@ set -e
 
 while getopts ":s" opt; do 
   case $opt in
-    s) SLEF_HOSTED=true;;
+    s) SELF_HOSTED=true;;
     :) echo "Option -$OPTARG requires an argument." >&2; exit 1;;
     \?) echo "Invalid option -$OPTARG" >&2; exit 1;;
   esac
@@ -27,7 +27,7 @@ else
             echo "Entering $dir"
             pushd "$dir"
             chmod +x build.sh
-            if [ "$SLEF_HOSTED" = true ]; then
+            if [ "$SELF_HOSTED" = true ]; then
               echo "Running build.sh for self-hosted runner"
               ./build.sh -f
             else
