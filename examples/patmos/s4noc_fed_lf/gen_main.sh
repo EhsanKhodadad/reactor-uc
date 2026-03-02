@@ -7,7 +7,7 @@ rm -rf main.c
 cat >> main.c <<EOF
 #include <stdio.h>
 #include <pthread.h>
-
+#include <machine/rtc.h>
 EOF
 
 # Generate include headers for each federate
@@ -57,6 +57,8 @@ cat >> main.c <<EOF
 
 int main(void) {
     pthread_t threads[$N];
+    long long cycles_before = get_cpu_cycles();
+
     printf("Starting S4NOC Federated LF Example\\n");
 EOF
 
@@ -81,6 +83,8 @@ done
 cat >> main.c <<EOF
 
     printf("All federates finished.\\n");
+    long long cycles_after = get_cpu_cycles();
+    printf("Total CPU cycles: %lld\\n", cycles_after - cycles_before);
     return 0;
 }
 EOF

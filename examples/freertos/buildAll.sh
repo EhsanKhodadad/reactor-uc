@@ -2,6 +2,7 @@
 set -e
 if [ -z "$PICO_SDK_PATH" ]; then
   echo "Error: PICO_SDK_PATH is not defined. Please set it before running this script."
+  exit 0
 else
     # Set the target board
     PICO_BOARD="pico_w"

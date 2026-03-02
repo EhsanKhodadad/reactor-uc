@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <pthread.h>
-
+#include <machine/rtc.h>
 #include "S4NoCFedLF/r1/src-gen/S4NoCFedLF/r1/lf_start.h"
 #include "S4NoCFedLF/r2/src-gen/S4NoCFedLF/r2/lf_start.h"
 
@@ -23,6 +23,8 @@ void* f2_thread(void* arg) {
 
 int main(void) {
     pthread_t threads[2];
+    long long cycles_before = get_cpu_cycles();
+
     printf("Starting S4NOC Federated LF Example\n");
     pthread_create(&threads[0], NULL, f1_thread, NULL);
     pthread_create(&threads[1], NULL, f2_thread, NULL);
@@ -33,5 +35,7 @@ int main(void) {
     pthread_join(threads[1], NULL);
 
     printf("All federates finished.\n");
+    long long cycles_after = get_cpu_cycles();
+    printf("Total CPU cycles: %lld\n", cycles_after - cycles_before);
     return 0;
 }

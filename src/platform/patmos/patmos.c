@@ -124,6 +124,7 @@ void MutexPatmos_unlock(Mutex* super) {
   PlatformPatmos* platform = (PlatformPatmos*)_lf_environment->platform;
   if (platform->num_nested_critical_sections == 0) {
     LF_ERR(PLATFORM, "MutexPatmos_unlock underflow before decrement");
+    throw("MutexPatmos_unlock underflow before decrement");
   }
   platform->num_nested_critical_sections--;
   if (platform->num_nested_critical_sections == 0) {
@@ -131,6 +132,7 @@ void MutexPatmos_unlock(Mutex* super) {
   } else if (platform->num_nested_critical_sections < 0) {
     LF_ERR(PLATFORM, "MutexPatmos_unlock underflow after decrement: %d",
              platform->num_nested_critical_sections);
+    throw("MutexPatmos_unlock underflow after decrement");
     validate(false);
   }
 }
