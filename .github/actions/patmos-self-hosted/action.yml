@@ -11,17 +11,17 @@ runs:
     - name: Clone and build Patmos
       shell: bash
       run: |
-        if [ -d "$HOME/t-crest" ]; then
+        if [ ! -d "$HOME/t-crest" ]; then
+          echo "Building Patmos..."
+          mkdir -p ~/t-crest
+          cd ~/t-crest
+          git clone https://github.com/t-crest/patmos-misc.git misc
+          ./misc/build.sh -q
+        else
           echo "t-crest already exists; skipping Patmos build"
-          exit 0
         fi
-        export PATH=$PATH:$HOME/t-crest/local/bin
-        echo "PATH=$PATH:$HOME/t-crest/local/bin" >> "$GITHUB_ENV"
-        echo $PATH
-        mkdir -p ~/t-crest
-        cd ~/t-crest
-        git clone https://github.com/t-crest/patmos-misc.git misc
-        ./misc/build.sh -q
+
+        echo "$HOME/t-crest/local/bin" >> $GITHUB_PATH
       
     - name: Verify Patmos installation
       shell: bash
