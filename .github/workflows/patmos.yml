@@ -35,4 +35,8 @@ jobs:
           - name: Build examples
             working-directory: ${{ github.workspace }}/examples/patmos
             run: |
+              if [ "${{ matrix.name }}" == "self-hosted" ]; then
+              ./buildAll.sh -s
+              else
               ./buildAll.sh
+              fi
