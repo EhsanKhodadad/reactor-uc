@@ -27,6 +27,11 @@ else
         ./build.sh -f
       else
         echo "Running build.sh for non-self-hosted runner"
+        if [ "$dir" = "./s4noc_fed" ]; then
+          echo "Skipping $dir for non-self-hosted runner"
+          popd
+          continue
+        fi
         ./build.sh -e
       fi
       popd
