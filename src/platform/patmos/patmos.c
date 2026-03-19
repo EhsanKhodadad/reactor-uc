@@ -130,8 +130,7 @@ void MutexPatmos_unlock(Mutex* super) {
   if (platform->num_nested_critical_sections == 0) {
     intr_enable();
   } else if (platform->num_nested_critical_sections < 0) {
-    LF_ERR(PLATFORM, "MutexPatmos_unlock underflow after decrement: %d",
-             platform->num_nested_critical_sections);
+    LF_ERR(PLATFORM, "MutexPatmos_unlock underflow after decrement: %d", platform->num_nested_critical_sections);
     throw("MutexPatmos_unlock underflow after decrement");
     validate(false);
   }
