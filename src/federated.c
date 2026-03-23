@@ -159,7 +159,11 @@ void FederatedInputConnection_ctor(FederatedInputConnection* self, Reactor* pare
                   FederatedInputConnection_prepare, FederatedInputConnection_cleanup, NULL);
   Mutex_ctor(&self->mutex.super);
   self->delay = delay;
-  self->type = (ConnectionType)(is_physical ? PHYSICAL_CONNECTION : LOGICAL_CONNECTION);
+  if (is_physical) {
+    self->type = PHYSICAL_CONNECTION;
+  } else {
+    self->type = LOGICAL_CONNECTION;
+  }
   self->last_known_tag = NEVER_TAG;
   self->max_wait = max_wait;
 }
