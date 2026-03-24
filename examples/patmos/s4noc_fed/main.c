@@ -4,6 +4,7 @@
 
 #include "sender/sender.h"
 #include "receiver/receiver.h"
+#include <machine/rtc.h>
 
 static void* receiver_thread(void* arg) {
     (void)arg;
@@ -20,7 +21,7 @@ static void* sender_thread(void* arg) {
 int main(void) {
     pthread_t receiver_tid;
     pthread_t sender_tid;
-
+    long long cycles_before = get_cpu_cycles();
     printf("Starting S4NOC Federated Example\n");
 
     pthread_create(&receiver_tid, NULL, receiver_thread, NULL);
@@ -31,6 +32,7 @@ int main(void) {
     pthread_join(receiver_tid, NULL);
     pthread_join(sender_tid, NULL);
 
-    printf("All federates finished.\n");
+    long long cycles_after = get_cpu_cycles();
+    printf("Total CPU cycles: %lld\n", cycles_after - cycles_before);
     return 0;
 }

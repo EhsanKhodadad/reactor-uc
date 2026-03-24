@@ -35,8 +35,9 @@ static pthread_mutex_t uart_lock = PTHREAD_MUTEX_INITIALIZER;
 #define EVENT_QUEUE_SIZE 1
 // Size of system event queue (startup, timers, etc.)
 #define SYSTEM_EVENT_QUEUE_SIZE 11
-// Size of reaction queue for scheduling
-#define REACTION_QUEUE_SIZE 1
+// Size of reaction queue for scheduling.
+// We need two levels: sender reaction and federated flush reaction.
+#define REACTION_QUEUE_SIZE 2
 // Scheduler timeout duration
 #define TIMEOUT SEC(SHUTDOWN_TIMEOUT_SEC)
 // Keep scheduler alive
@@ -177,7 +178,7 @@ typedef struct {
   Reactor super;
   LF_CHILD_REACTOR_INSTANCE(Sender, sender, NUM_CHILD_REACTORS);  // Child sender reactor
   LF_FEDERATED_CONNECTION_BUNDLE_INSTANCE(Sender, Receiver);  // Federated connection to receiver
-  LF_FEDERATE_BOOKKEEPING_INSTANCES(NUM_BUNDLES);
+  LF_FEDERATE_BOOKKEEPING_INSTANCES(NUM_BUNDLES, NUM_OUTPUT_CONNECTIONS);
   LF_CHILD_OUTPUT_CONNECTIONS(sender, out, NUM_CHILD_REACTORS, NUM_CHILD_REACTORS, NUM_OUTPUT_CONNECTIONS);
   LF_CHILD_OUTPUT_EFFECTS(sender, out, NUM_CHILD_REACTORS, NUM_CHILD_REACTORS, 0);
   LF_CHILD_OUTPUT_OBSERVERS(sender, out, NUM_CHILD_REACTORS, NUM_CHILD_REACTORS, 0);

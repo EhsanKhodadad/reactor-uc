@@ -32,7 +32,7 @@ runs:
       shell: bash
       run: |
         export PATH=$PATH:$HOME/t-crest/local/bin
-        echo "PATH=$PATH:$HOME/t-crest/local/bin" >> "$GITHUB_ENV"
+        echo "$HOME/t-crest/local/bin" >> $GITHUB_PATH
         echo $PATH
         mkdir ~/t-crest
         cd ~/t-crest
