@@ -5,11 +5,10 @@ import org.lflang.lf.*
 
 data object UcClockSyncMainState {
   const val OFF = 1
-  const val INIT = 2
-  const val ON = 3
+  const val ON = 2
 }
 
-class UcClockSyncMainAttribute(var state: Int = UcClockSyncMainState.INIT) {
+class UcClockSyncMainAttribute(var state: Int = UcClockSyncMainState.ON) {
   // Secondary constructor that initializes the data class from an Attribute object
   constructor(inst: Reactor) : this() {
     state = getStateFromReactor(inst)
@@ -19,8 +18,7 @@ class UcClockSyncMainAttribute(var state: Int = UcClockSyncMainState.INIT) {
     return when (AttributeUtils.getClockSyncAttrValue(inst)) {
       "off" -> UcClockSyncMainState.OFF
       "on" -> UcClockSyncMainState.ON
-      "init" -> UcClockSyncMainState.INIT
-      else -> UcClockSyncMainState.INIT
+      else -> UcClockSyncMainState.ON
     }
   }
 
