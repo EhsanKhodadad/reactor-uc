@@ -3,6 +3,7 @@ package org.lflang.generator.uc
 import java.nio.file.Path
 import java.nio.file.Paths
 import org.eclipse.emf.ecore.resource.Resource
+import org.lflang.AttributeUtils
 import org.lflang.generator.CodeMap
 import org.lflang.generator.GeneratorResult
 import org.lflang.generator.GeneratorUtils.canGenerate
@@ -12,10 +13,8 @@ import org.lflang.lf.LfFactory
 import org.lflang.lf.Reactor
 import org.lflang.reactor
 import org.lflang.scoping.LFGlobalScopeProvider
-import org.lflang.target.property.ClockSyncModeProperty
-import org.lflang.target.property.NoCompileProperty
-import org.lflang.target.property.type.ClockSyncModeType
-import org.lflang.target.property.type.PlatformType
+import org.lflang.target.PlatformType
+import org.lflang.toDefinition
 import org.lflang.util.FileUtil
 
 class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalScopeProvider) :
@@ -23,6 +22,8 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
 
   private val nonFederatedGenerator = UcGeneratorNonFederated(context, scopeProvider)
   val federates = mutableListOf<UcFederate>()
+
+  private val clockSyncMainState = UcClockSyncMainAttribute()
 
   // Compute the total number of events and reactions within a federate. This reuses the
   // computation for the non-federated case, but federated connections are also considered.
@@ -33,19 +34,18 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
         nonFederatedGenerator.totalNumEventsAndReactions(federate.inst.reactor)
     return Pair(
         eventsFromFederatedConnections + eventsAndReactionsInFederate.first,
-        unaccountedNumberOfFlushReactions + eventsAndReactionsInFederate.second)
+        unaccountedNumberOfFlushReactions + eventsAndReactionsInFederate.second,
+    )
   }
 
   private fun doGenerateFederate(
       resource: Resource,
       context: LFGeneratorContext,
       srcGenPath: Path,
-      federate: UcFederate
+      federate: UcFederate,
   ): GeneratorResult.Status {
     if (!canGenerate(errorsOccurred(), federate.inst, messageReporter, context))
         return GeneratorResult.Status.FAILED
-
-    super.copyUserFiles(targetConfig, fileConfig)
 
     // generate header and source files for all reactors
     getAllInstantiatedReactors(federate.inst.reactor).map {
@@ -63,9 +63,13 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
       val headerFile = fileConfig.getPreambleHeaderPath(r)
       val preambleCodeMap = CodeMap.fromGeneratedCode(generator.generateHeader())
       codeMaps[srcGenPath.resolve(headerFile)] = preambleCodeMap
-      FileUtil.writeToFile(preambleCodeMap.generatedCode, srcGenPath.resolve(headerFile), true)
+      FileUtil.writeToFile(
+          preambleCodeMap.generatedCode,
+          srcGenPath.resolve(headerFile),
+          true,
+      )
     }
-    return GeneratorResult.Status.GENERATED
+    return GeneratorResult.Status.SUCCESS
   }
 
   // The same UcGeneratorFederated is used to iteratively generated a project for each federate.
@@ -88,6 +92,7 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
         this.mainDef = LfFactory.eINSTANCE.createInstantiation()
         this.mainDef.name = reactor.name
         this.mainDef.reactorClass = reactor
+        this.clockSyncMainState.setState(reactor)
       }
     }
   }
@@ -101,7 +106,11 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
     for (ucFederate in federates) {
       val projectTemplateGenerator =
           UcFederatedTemplateGenerator(
-              mainDef, ucFederate, targetConfig, projectsRoot, messageReporter)
+              mainDef,
+              ucFederate,
+              projectsRoot,
+              messageReporter,
+          )
       projectTemplateGenerator.generateFiles()
     }
   }
@@ -116,8 +125,7 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
     }
 
     // Make sure we have a grandmaster
-    if (targetConfig.getOrDefault(ClockSyncModeProperty.INSTANCE) !=
-        ClockSyncModeType.ClockSyncMode.OFF &&
+    if (clockSyncMainState.state != UcClockSyncMainState.OFF &&
         federates.filter { it.clockSyncParams.grandmaster }.isEmpty()) {
       messageReporter
           .nowhere()
@@ -149,8 +157,11 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
         // generate platform specific files
         platformGenerator.generatePlatformFiles()
 
-        if (platform.platform == PlatformType.Platform.NATIVE &&
-            !targetConfig.get(NoCompileProperty.INSTANCE)) {
+        val platform =
+            if (ucFederate.platform == PlatformType.Platform.AUTO)
+                AttributeUtils.getPlatform(mainDef.reactorClass.toDefinition())
+            else ucFederate.platform
+        if (platform == PlatformType.Platform.NATIVE) {
 
           if (!platformGenerator.doCompile(context)) {
             context.finish(GeneratorResult.Status.FAILED, codeMaps)
@@ -159,13 +170,8 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
         }
       }
     }
-    if (platform.platform == PlatformType.Platform.NATIVE &&
-        !targetConfig.get(NoCompileProperty.INSTANCE)) {
-      context.finish(GeneratorResult.Status.COMPILED, codeMaps)
-    } else {
-      context.finish(GeneratorResult.Status.GENERATED, codeMaps)
-    }
-    return
+
+    context.finish(GeneratorResult.Status.SUCCESS, codeMaps)
   }
 
   private fun generateFederateFiles(federate: UcFederate, srcGenPath: Path) {
@@ -173,8 +179,7 @@ class UcGeneratorFederated(context: LFGeneratorContext, scopeProvider: LFGlobalS
     nonFederatedGenerator.generateReactorFiles(federate.inst.reactor, srcGenPath)
 
     // Then we generate a reactor which wraps around the top-level reactor in the federate.
-    val generator =
-        UcFederateGenerator(federate, federates, fileConfig, messageReporter, targetConfig)
+    val generator = UcFederateGenerator(federate, federates, fileConfig, messageReporter)
     val top = federate.inst.eContainer() as Reactor
 
     // Record the number of events and reactions in this reactor
