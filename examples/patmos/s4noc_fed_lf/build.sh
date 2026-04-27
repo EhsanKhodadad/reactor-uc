@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Source shared build helpers
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 . "$SCRIPT_DIR/../build-helpers.sh"
@@ -20,7 +22,7 @@ $REACTOR_UC_PATH/lfc/bin/lfc-dev --gen-fed-templates src/$LF_MAIN.lf
 # Generate and build r1 sources
 pushd ./$LF_MAIN/r1
     ./run_lfc.sh
-    make all || exit 1
+    make all
 popd
 
 N=2
@@ -31,7 +33,7 @@ for i in $(seq 2 $N); do
         ./run_lfc.sh
         sed -i "s/_lf_environment/_lf_environment_$i/g; s/lf_exit/lf_exit_$i/g; s/lf_start/lf_start_$i/g" $REACTOR_PATH/lf_start.c
         sed -i "s/(Federate/(Federate$i/g; s/FederateStartup/Federate${i}Startup/g; s/FederateClock/Federate${i}Clock/g; s/Reactor_${LF_MAIN}/Reactor_${LF_MAIN}_$i/g; s/${LF_MAIN}_r1/${LF_MAIN}_r1_$i/g" $REACTOR_PATH/lf_federate.h $REACTOR_PATH/lf_federate.c
-        make all OBJECTS="$REACTOR_PATH/lf_federate.bc $REACTOR_PATH/$LF_MAIN/Dst.bc $REACTOR_PATH/lf_start.bc" || exit 1
+        make all OBJECTS="$REACTOR_PATH/lf_federate.bc $REACTOR_PATH/$LF_MAIN/Dst.bc $REACTOR_PATH/lf_start.bc"
     popd
 done
 
@@ -45,7 +47,7 @@ done
 chmod +x ./gen_main.sh
 ./gen_main.sh N=$N
 
-$CC -O2 -Wall -Wextra main.c $A_FILES -o $BIN_DIR/$LF_MAIN || exit 1
+$CC -O2 -Wall -Wextra main.c $A_FILES -o $BIN_DIR/$LF_MAIN
 
 rm $REACTOR_UC_PATH/external/nanopb/pb_encode.bc $REACTOR_UC_PATH/external/nanopb/pb_decode.bc $REACTOR_UC_PATH/external/nanopb/pb_common.bc $REACTOR_UC_PATH/external/Unity/src/unity.bc
 
