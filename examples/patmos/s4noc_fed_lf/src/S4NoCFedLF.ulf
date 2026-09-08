@@ -35,7 +35,7 @@ reactor Dst {
     printf("Patmos:Received %d from Src\n", in->value); 
     if (in->value >= 43) {
       self->check = true;
-      env->request_shutdown(env, MSEC(0));
+      env->request_shutdown(env, MSEC(5));
     }
   =}
 
