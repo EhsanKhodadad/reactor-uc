@@ -12,6 +12,7 @@ enum class NetworkChannelType {
   COAP_UDP_IP,
   S4NOC,
   UART,
+  LORA,
   NONE
 }
 
@@ -25,6 +26,7 @@ object UcNetworkInterfaceFactory {
           },
           Pair(CUSTOM) { federate, attr -> UcCustomInterface.fromAttribute(federate, attr) },
           Pair(UART) { federate, attr -> UcUARTInterface.fromAttribute(federate, attr) },
+          Pair(LORA) { federate, attr -> UcLoRaInterface.fromAttribute(federate, attr) },
           Pair(S4NOC) { federate, attr -> UcS4NocInterface.fromAttribute(federate, attr) })
 
   fun createInterfaces(federate: UcFederate): List<UcNetworkInterface> {
@@ -46,6 +48,7 @@ object UcNetworkInterfaceFactory {
       "uart" -> creators.get(UART)!!.invoke(federate, attr)
       "coap" -> creators.get(COAP_UDP_IP)!!.invoke(federate, attr)
       "s4noc" -> creators.get(S4NOC)!!.invoke(federate, attr)
+      "lora" -> creators.get(LORA)!!.invoke(federate, attr)
       "custom" -> creators.get(CUSTOM)!!.invoke(federate, attr)
       else -> throw IllegalArgumentException("Unrecognized interface attribute $attr")
     }
@@ -76,6 +79,8 @@ class UcCoapUdpIpEndpoint(val ipAddress: IPAddress, iface: UcCoapUdpIpInterface)
     UcNetworkEndpoint(iface) {}
 
 class UcS4NocEndpoint(val core: Int, iface: UcS4NocInterface) : UcNetworkEndpoint(iface) {}
+
+class UcLoRaEndpoint(val core: Int, iface: UcLoRaInterface) : UcNetworkEndpoint(iface) {}
 
 class UcCustomEndpoint(iface: UcCustomInterface) : UcNetworkEndpoint(iface) {}
 
@@ -224,6 +229,27 @@ class UcS4NocInterface(val core: Int, name: String? = null) :
   }
 }
 
+
+class UcLoRaInterface(val core: Int, name: String? = null) :
+    UcNetworkInterface(LORA, name ?: "lora") {
+  override val includeHeaders: String = ""
+  override val compileDefs: String = "NETWORK_CHANNEL_LORA"
+
+  fun createEndpoint(): UcLoRaEndpoint {
+    val ep = UcLoRaEndpoint(core, this)
+    endpoints.add(ep)
+    return ep
+  }
+
+  companion object {
+    fun fromAttribute(federate: UcFederate, attr: Attribute): UcLoRaInterface {
+      val node = attr.getParamInt("node") ?: 0
+      val name = attr.getParamString("name")
+      return UcLoRaInterface(node, name)
+    }
+  }
+}
+
 class UcCustomInterface(name: String, val include: String, val args: String? = null) :
     UcNetworkInterface(CUSTOM, name) {
   override val compileDefs = ""
@@ -322,6 +348,11 @@ abstract class UcNetworkChannel(
           val destEp = (destIf as UcS4NocInterface).createEndpoint()
           channel = UcS4NocChannel(srcEp, destEp)
         }
+        LORA -> {
+          val srcEp = (srcIf as UcLoRaInterface).createEndpoint()
+          val destEp = (destIf as UcLoRaInterface).createEndpoint()
+          channel = UcLoRaChannel(srcEp, destEp)
+        }
         CUSTOM -> {
           val srcEp = (srcIf as UcCustomInterface).createEndpoint()
           val destEp = (destIf as UcCustomInterface).createEndpoint()
@@ -409,6 +440,21 @@ class UcS4NocChannel(
 
   override val codeType: String
     get() = "S4NOCPollChannel"
+}
+
+class UcLoRaChannel(
+    src: UcLoRaEndpoint,
+    dest: UcLoRaEndpoint,
+) : UcNetworkChannel(LORA, src, dest, false) {
+  private val srcLoRa = src
+  private val destLoRa = dest
+
+  override fun generateChannelCtorSrc() = "LoRaPollChannel_ctor(&self->channel, ${srcLoRa.core}, ${destLoRa.core});"
+
+  override fun generateChannelCtorDest() = "LoRaPollChannel_ctor(&self->channel, ${destLoRa.core}, ${srcLoRa.core});"
+
+  override val codeType: String
+    get() = "LoRaPollChannel"
 }
 
 class UcCustomChannel(

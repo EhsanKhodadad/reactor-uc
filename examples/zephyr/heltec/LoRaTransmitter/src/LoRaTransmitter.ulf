@@ -1,0 +1,101 @@
+preamble {=
+    #include <string.h>
+    #include <zephyr/kernel.h>
+    #include <zephyr/drivers/lora.h>
+    #include <zephyr/logging/log.h>
+
+    LOG_MODULE_DECLARE(os, LOG_LEVEL_INF);
+
+    static inline const struct device *get_lora_device(void) {
+        return DEVICE_DT_GET(DT_ALIAS(lora0));
+    }
+=}
+
+/**
+ * Sender Reactor: Periodically constructs integer messages and transmits via LoRa.
+ */
+reactor Transmitter {
+    output out: int;
+    timer t(0, 5 sec);
+    state count: int = 0;
+
+    reaction(startup) {=
+        const struct device *lora_dev = get_lora_device();
+        if (!device_is_ready(lora_dev)) {
+            LOG_ERR("LoRa device not ready on Transmitter node");
+            return;
+        }
+
+        struct lora_modem_config config = {
+            .frequency = 868000000,
+            .bandwidth = BW_125_KHZ,
+            .datarate = SF_7,
+            .preamble_len = 8,
+            .coding_rate = CR_4_5,
+            .tx_power = 14,
+            .tx = true,
+        };
+
+        if (lora_config(lora_dev, &config) < 0) {
+            LOG_ERR("LoRa TX config failed");
+        } else {
+            LOG_INF("Transmitter initialized");
+        }
+    =}
+
+    reaction(t) -> out {=
+        self->count++;
+        int payload = self->count;
+
+        LOG_INF("Transmitting packet: %d", payload);
+        lf_set(out, payload);
+    =}
+}
+
+/**
+ * Receiver Reactor: Listens for incoming packet signals.
+ */
+reactor Receiver {
+    input in: int;
+
+    reaction(startup) {=
+        const struct device *lora_dev = get_lora_device();
+        if (!device_is_ready(lora_dev)) {
+            LOG_ERR("LoRa device not ready on Receiver node");
+            return;
+        }
+
+        struct lora_modem_config config = {
+            .frequency = 868000000,
+            .bandwidth = BW_125_KHZ,
+            .datarate = SF_7,
+            .preamble_len = 8,
+            .coding_rate = CR_4_5,
+            .tx_power = 14,
+            .tx = false,
+        };
+
+        if (lora_config(lora_dev, &config) < 0) {
+            LOG_ERR("LoRa RX config failed");
+        } else {
+            LOG_INF("Receiver initialized");
+        }
+    =}
+
+    reaction(in) {=
+        if (lf_is_present(in)) {
+            LOG_INF("Received Message: %d", in->value);
+        }
+    =}
+}
+
+@platform ("Zephyr") 
+@board ("heltec_wifi_lora32_v2/esp32/procpu")
+federated reactor {
+    @interface_lora(node=1)
+    tx = new Transmitter()
+    @interface_lora(node=2)
+    rx = new Receiver()
+
+    tx.out -> rx.in;
+}

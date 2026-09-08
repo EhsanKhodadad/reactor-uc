@@ -315,6 +315,14 @@ public class AttributeSpec {
         "interface_s4noc",
         new AttributeSpec(List.of(new AttrParamSpec("core", AttrParamType.INT, false))));
     ATTRIBUTE_SPECS_BY_NAME.put(
+        "interface_lora",
+        new AttributeSpec(List.of(new AttrParamSpec("core", AttrParamType.INT, false))));
+        new AttributeSpec(
+            List.of(
+                new AttrParamSpec("name", AttrParamType.STRING, false),
+                new AttrParamSpec("args", AttrParamType.STRING, true),
+                new AttrParamSpec("include", AttrParamType.STRING, false)));
+    ATTRIBUTE_SPECS_BY_NAME.put(
         "interface_custom",
         new AttributeSpec(
             List.of(
