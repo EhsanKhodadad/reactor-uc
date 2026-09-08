@@ -16,8 +16,19 @@
 #define S4NOC_OPEN_MESSAGE_RESPONSE {0xC0, 0xFF, 0x31, 0xC0}
 #endif
 
-S4NOCGlobalState s4noc_global_state = {0};
+S4NOCGlobalState s4noc_global_state;
 static pthread_mutex_t s4noc_global_lock = PTHREAD_MUTEX_INITIALIZER;
+static bool s4noc_global_initialized = false;
+
+void S4NOCGlobalState_init(void) {
+  pthread_mutex_lock(&s4noc_global_lock);
+  if (!s4noc_global_initialized) {
+    S4NOC_CHANNEL_DEBUG("Initializing S4NOC global state");
+    memset(&s4noc_global_state, 0, sizeof(s4noc_global_state));
+    s4noc_global_initialized = true;
+  }
+  pthread_mutex_unlock(&s4noc_global_lock);
+}
 
 lf_ret_t S4NOCPollChannel_poll(NetworkChannel* untyped_self);
 
@@ -415,6 +426,7 @@ lf_ret_t S4NOCPollChannel_poll(NetworkChannel* untyped_self) {
 
 void S4NOCPollChannel_ctor(S4NOCPollChannel* self, unsigned int destination_core) {
   assert(self != NULL);
+  S4NOCGlobalState_init();
 
   if (destination_core >= S4NOC_CORE_COUNT) {
     S4NOC_CHANNEL_WARN("Invalid destination_core=%u (core_count=%d); channel will remain closed", destination_core,

@@ -25,6 +25,8 @@ struct S4NOCGlobalState {
 
 extern S4NOCGlobalState s4noc_global_state;
 
+void S4NOCGlobalState_init(void);
+
 struct S4NOCPollChannel {
   PolledNetworkChannel super;
   NetworkChannelState state;
