@@ -6,7 +6,7 @@ if [ -z "${REACTOR_UC_PATH}" ]; then
     exit 1
 fi
 
-${REACTOR_UC_PATH}/ulf/bin/ulfc-dev src/LoRaTransmitter.ulf
+${REACTOR_UC_PATH}/ulf/bin/ulfc-dev src/LoRa_fed_lf.ulf
 
 for federate in tx rx; do
     echo "Building ${federate} federate..."

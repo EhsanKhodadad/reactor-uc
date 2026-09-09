@@ -117,18 +117,12 @@ lf_ret_t LoRaPollChannel_poll(NetworkChannel* untyped_self) {
   LoRaPollChannel* self = (LoRaPollChannel*)untyped_self;
   const struct device* dev = get_lora_device();
 
-  // The transmitter has no receive path. Avoid repeatedly switching its radio
-  // into RX mode between federated sends.
-  if (self->local_node_id == 1) {
-    return LF_NETWORK_CHANNEL_EMPTY;
-  }
-
   LoRaHeaderFrame frame;
   int16_t rssi;
   int8_t snr;
 
   // Keep the receiver open long enough to catch a packet on the air.
-  int bytes_rcvd = lora_recv(dev, (uint8_t*)&frame, sizeof(frame), K_MSEC(500), &rssi, &snr);
+  int bytes_rcvd = lora_recv(dev, (uint8_t*)&frame, sizeof(frame), K_SECONDS(5), &rssi, &snr);
   if (bytes_rcvd < 0) {
     return LF_NETWORK_CHANNEL_EMPTY; // No packet received
   }

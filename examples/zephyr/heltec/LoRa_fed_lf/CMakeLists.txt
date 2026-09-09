@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20.0)
 
 # 1. Locate Zephyr environment
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(LoRaTransmitter)
+project(LoRa_fed_lf)
 
 # 2. Set target platform for reactor-uc
 set(PLATFORM "ZEPHYR" CACHE STRING "Set platform to Zephyr" FORCE)
@@ -13,7 +13,7 @@ if(NOT DEFINED RUNTIME_PATH)
     if(DEFINED ENV{REACTOR_UC_PATH})
         set(RUNTIME_PATH "$ENV{REACTOR_UC_PATH}" CACHE STRING "Path to reactor-uc runtime")
     else()
-        # Default to relative path: examples/zephyr/heltec/LoRaTransmitter -> ../../..
+        # Default to relative path: examples/zephyr/heltec/LoRa_fed_lf -> ../../..
         get_filename_component(RUNTIME_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../.." ABSOLUTE)
     endif()
     
@@ -25,11 +25,11 @@ endif()
 # 3. Load generated build configuration from lfc
 # For federated reactors, select the appropriate federate (tx, rx, etc.)
 set(FEDERATE "tx" CACHE STRING "Select federate for federated reactor")
-set(LF_GEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src-gen/LoRaTransmitter/${FEDERATE}")
+set(LF_GEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src-gen/LoRa_fed_lf/${FEDERATE}")
 if(EXISTS "${LF_GEN_DIR}/Include.cmake")
     include("${LF_GEN_DIR}/Include.cmake")
 else()
-    message(FATAL_ERROR "src-gen/LoRaTransmitter/${FEDERATE}/Include.cmake not found. Run lfc/ulfc first.")
+    message(FATAL_ERROR "src-gen/LoRa_fed_lf/${FEDERATE}/Include.cmake not found. Run lfc/ulfc first.")
 endif()
 
 # 4. Add reactor-uc runtime
