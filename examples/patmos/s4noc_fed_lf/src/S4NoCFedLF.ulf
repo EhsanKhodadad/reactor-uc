@@ -56,6 +56,8 @@ federated reactor {
   @interface_s4noc(core=1) 
   r2 = new Dst()
 
+  // Temporary
+  @maxwait(100ms)
   @buffer(200) 
   r1.out -> r2.in 
 }
