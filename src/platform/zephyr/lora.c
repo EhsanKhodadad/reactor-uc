@@ -1,4 +1,3 @@
-#include "lora_channel.h"
 #include "reactor-uc/logging.h"
 #include "reactor-uc/serialization.h"
 #include <zephyr/logging/log.h>
